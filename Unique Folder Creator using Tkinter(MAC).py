@@ -32,32 +32,124 @@ Setup to Test Code:
 - As of test this version (on Mac) Mar, 4 - 2020 the basic folder creation works for the initial test.
 
 Know Bugs:
-- Error presents if folders exist, to be fixed.
-
+- none
 """
+# REVISIONS:
+'''
+Thu, 5 Mar 2020
+_______________
+ X  = Implemented
+ W  = WIP
+[ ] = Planned
+*** = Error Occurred After Implementation, Other Features Affected
+____________________________________________________________
+[X] Solved various bugs and introduced some improvements.
+[X] Created the following new function blocks further up in the prog structure:
+    - checkInputBox
+    - foldersCreatedMsg  
+    - foldersExistMsg
+[X] Reordered and moved all functions and list to top of structure.
+[X] Bound the ENTER key to the User Input box to call createFolders func.
+[X] Center align the Button and Information text on the dialog.
+[X] Fix Button colour
+[X] Make msg for FOLDERS EXISTING font = BOLD, colour = Red
+[X] Make dialog size FIXED (Non-resizable)
+[X] Add 'focus' to the dialog Input box to control the default & entry text properties
+    Set the default text to light grey when the dialog has no focus.
+    Clear the input box when selected with cursor
+    Set text entered to black colour.
+[X] Set 5 second Timeout to close dialog after either even occurs:
+    - The Create Folders button is pressed
+    - The ENTER key is pressed. 
+[ ] When inputting additional project numbers, do the following.
+    Delete previous message (Success / Fail) once first project number has been processed.
+*** Currently there is overlap with 2 messages appearing in the same pos without the prev being deleted.    
+[W] For inputting 'any' Project Number -- Validate, check folder path exists:
+    Check in two stages, check using a:
+    [X] FULL path match
+    [ ] PARTIAL match using one of the following combinations:
+        - \d{3}.
+        - \d{4}.
+        - \w{3}\d{4}.
+    Include Error Handling for non-existent folders(projects)
+'''
 
-root = Tk()
-root.title('Unique Folder Creator')  # Sets the dialog title
 
-root.geometry("400x175")  # Sets the physical size of the dialog box
+# Check if Input box is empty when Button / Enter key pressed.
+def checkInputBox():
+    if len(e.get()) == 0:
+        myLabel1 = Label(root, wraplength=280, fg="Red", text="The INPUT BOX is Empty!")
+        myLabel1.pack()
+        myLabel1.place(x=xPos, y=yPos)
 
-myLabel0 = Label(root, wraplength=280, text="Enter Project Number: > ")
-myLabel0.pack()
-myLabel0.place(x=15, y=25)  # Sets the pos of the TEXT on canvas
 
-e = Entry(root, width=20, borderwidth=1)  # Entry creates an INPUT BOX on the canvas
-e.pack()  # Removed >> e.insert(0) which sets default txt in Entry field removed 'Enter...'
-e.place(x=175, y=25)  # Sets the pos of the INPUT BOX on canvas
+# Message displays when folders are successfully created (label on dialog).
+def foldersCreatedMsg():
+    myLabel2 = Label(root, wraplength=280, fg="Blue", text="Folders Created Successfully",
+                     font="none 16 bold")
+    myLabel2.pack()
+    myLabel2.place(x=xLen/2, y=yPos, anchor="center")
 
-if len(e.get()) == 0:  # Check if the Input Box is empty
-    myLabel1 = Label(root, wraplength=280, fg="Red", text="The INPUT BOX is Empty!")
-    myLabel1.pack()
-    myLabel1.place(x=15, y=145)  # Sets the pos of the TEXT on canvas
+    closeDialog()
 
-myLabel2 = Label(root, wraplength=280, text= \
-    "Customer Project Folders will be created under '3 WIP' under the Project selected ")
-myLabel2.pack()
-myLabel2.place(x=15, y=95)  # Sets the pos of the TEXT on canvas
+
+# Message displays if folder(project) already exists (label on dialog).
+def foldersExistMsg():
+    myLabel3 = Label(root, wraplength=280, fg="Red", text="FOLDER(S) EXISTS", font="none 16 bold")
+    myLabel3.pack()
+    myLabel3.place(x=xLen/2, y=yPos, anchor="center")
+
+    closeDialog()
+
+
+def folderMissing():
+    myLabel4 = Label(root, wraplength=280, fg="Red", text="Required PROJECT Folder is MISSING",
+                     font="none 16 bold")
+    myLabel4.pack()
+    myLabel4.place(x=xLen / 2, y=yPos, anchor="center")
+
+    closeDialog()
+
+
+# Create main and sub-folders
+def createFolders(*args):
+    rootPath = r'/Users/Shared/' + e.get() + '/3 WIP'
+
+    checkInputBox()  # Check for User Input
+
+    try:
+        if os.path.isdir(rootPath):
+            for rt, sub in zip(main, subs):  # Main folders
+                os.mkdir(os.path.join(rootPath, rt))  # Create parent folders
+                for s in sub:  # Create Sub-dirs
+                    os.mkdir(os.path.join(rootPath, rt, s))
+
+            foldersCreatedMsg()  # Displays msg that folder have been created
+
+        else:
+            folderMissing()  # Displays msg that the target folder has not been found
+
+    except FileExistsError:  # Error Handling if folder already exists
+        foldersExistMsg()
+
+
+# Make entry box text 'black' when dialog has 'focus'
+def handle_focus_in(_):
+    e.delete(0, END)
+    e.config(fg='black')
+
+
+# Make entry box text 'grey' when dialog has no 'focus'
+def handle_focus_out(_):
+    e.delete(0, END)
+    e.config(fg='grey')
+    e.insert(0, "Enter the Project Number")
+
+
+# After EVENT (Button / Enter key) Start 5 second timer to close dialog.
+def closeDialog(*args):
+    root.after(3000, root.destroy)  # 3000 = 3 seconds
+
 
 # Main/Top level folders
 main = ["1.0  Problem Understanding",
@@ -106,29 +198,45 @@ subs = [
      '7.13 Patents']
 ]
 
+# Dialog size
+xLen = 400
+yLen = 200
 
-def createFolders():
-    rootPath = r'/Users/Shared/' + e.get() + '/3 WIP'
+# Common Label position for msgs on dialog
+xPos = 15
+yPos = 180
 
-    try:
+# Initialises dialog and sets dialog name on top border
+root = Tk()
+root.title('Unique Folder Creator')
 
-        for root, sub in zip(main, subs):  # Main folders
-            os.mkdir(os.path.join(rootPath, root))  # create parent folders
-            for s in sub:  # Sub-dirs
-                os.mkdir(os.path.join(rootPath, root, s))
+# Defines physical size of FIXED (non-resizable) dialog box
+root.geometry("400x200")
+root.resizable(False, False)
 
-    except FileExistsError:
-        myLabel3 = Label(root, wraplength=280, fg="Red", text="FOLDER EXISTS")
-        myLabel3.pack()
-        myLabel3.place(x=15, y=145)  # Sets the pos of the TEXT on canvas
+# Controls 'Helper' text appearance in input box
+root.bind("<FocusIn>", handle_focus_in)
+root.bind("<FocusOut>", handle_focus_out)
 
+# Information label informing user where folders will be created.
+myLabel2 = Label(root, wraplength=280,
+                 text="Customer Project Folders will be created under '3 WIP' under the Project selected ",
+                 font=('Helvetica', 14))
+myLabel2.pack()
+myLabel2.place(x=xLen/2, y=135, anchor="center")  # Sets the pos
 
-myLabel4 = Label(root, wraplength=280, fg="Blue", text="Folders Created Successfully")
-myLabel4.pack()
-myLabel4.place(x=15, y=145)  # Sets the pos of the TEXT on canvas
+# Creates Input box for user entry
+e = Entry(root, width=20, borderwidth=2, font=('Helvetica', 14))
+e.bind("<Return>", createFolders)  # Bind ENTER key to func 'createFolders' NB: Omit () from func call.
+# e.bind("<Return>", closeDialog)  # Triggers 5 sec countdown timer to close dialog, omit () from func call.
+e.insert(0, "Enter the Project Number")
+e.pack()  # Removed >> e.insert(0) which sets default txt in Entry field removed 'Enter...'
+e.place(x=xLen/2, y=25, anchor="center")  # Sets the pos
 
-myButton = Button(root, text='Create Folders', command=createFolders, fg="blue")  # Omit () from 'COMMAND'
+# Dialog Button to create folders
+myButton = Button(root, text='Create Folders', command=createFolders, fg="black", highlightbackground='yellow',
+                  font=('Helvetica', 20))  # Omit () from 'COMMAND'
 myButton.pack()
-myButton.place(x=110, y=55)  # Sets the pos of the BUTTON on canvas
+myButton.place(x=xLen/2, y=80, anchor="center")
 
 root.mainloop()  # Keeps in a loop to remains visible.
