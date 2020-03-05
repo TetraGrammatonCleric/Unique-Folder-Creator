@@ -1,6 +1,7 @@
 # Unique Folder Creator using Tkinter dialog
 """
---- WORK IN PROGRESS as of 4th Marc 2020 ---
+--- WORK IN PROGRESS as of 6th Marc 2020 ---
+Refer revisions section below for details of changes.
 Created by David Ponder, 2020 with thanks and help of the Real Python community.
 """
 from tkinter import *
