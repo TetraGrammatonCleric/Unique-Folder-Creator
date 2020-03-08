@@ -58,17 +58,19 @@ Tkinter dialog with the following functionality
 3. Input box added, positioned towards top and center
 4. Instruction added to left of Input box
 5. Button with text 'Create Folders' added directly below Input box
+6. User messages positioned below User Info, In BOLD red/blue font.
 
 Basic Error Handling considered / implemented for:
 - No user input
 - Wrong project number
+- Characters entered too small
 
 
 ## Future / Planned Futures to be Implemented
-[ ] - Check if user entered project number exists
+[X] - Check if user entered project number exists
 
 [ ] - Read in folder structure from customer provided .xlsx or .csv file
 
 [ ] - Move all folder from 2.0 WORK to 3.0 OUTPUT
 
-[ ] - Accept ENTER key pressed for User entry of Project Number in Input box.
+[X] - Accept ENTER key pressed for User entry of Project Number in Input box.
