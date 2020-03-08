@@ -6,6 +6,7 @@ Created by David Ponder, 2020 with thanks and help of the Real Python community.
 """
 from tkinter import *
 import os
+import glob
 
 # NOTES:
 """
@@ -35,57 +36,87 @@ Setup to Test Code:
 Know Bugs:
 - none
 """
-# REVISIONS:
+# REVISIONS: Sun, 8 Mar 2020
 '''
-Thu, 5 Mar 2020
-_______________
  X  = Implemented
  W  = WIP
 [ ] = Planned
 *** = Error Occurred After Implementation, Other Features Affected
 ____________________________________________________________
-[X] Solved various bugs and introduced some improvements.
-[X] Created the following new function blocks further up in the prog structure:
-    - checkInputBox
-    - foldersCreatedMsg  
-    - foldersExistMsg
-[X] Reordered and moved all functions and list to top of structure.
-[X] Bound the ENTER key to the User Input box to call createFolders func.
-[X] Center align the Button and Information text on the dialog.
-[X] Fix Button colour
-[X] Make msg for FOLDERS EXISTING font = BOLD, colour = Red
-[X] Make dialog size FIXED (Non-resizable)
-[X] Add 'focus' to the dialog Input box to control the default & entry text properties
-    Set the default text to light grey when the dialog has no focus.
-    Clear the input box when selected with cursor
-    Set text entered to black colour.
-[X] Set 5 second Timeout to close dialog after either even occurs:
-    - The Create Folders button is pressed
-    - The ENTER key is pressed. 
-[ ] When inputting additional project numbers, do the following.
-    Delete previous message (Success / Fail) once first project number has been processed.
-*** Currently there is overlap with 2 messages appearing in the same pos without the prev being deleted.    
-[W] For inputting 'any' Project Number -- Validate, check folder path exists:
-    Check in two stages, check using a:
-    [X] FULL path match
-    [ ] PARTIAL match using one of the following combinations:
-        - \d{3}.
-        - \d{4}.
-        - \w{3}\d{4}.
-    Include Error Handling for non-existent folders(projects)
+12. [ ] When inputting additional project numbers, do the following.
+        Delete previous message (Success / Fail) once first project number has been processed.
+    *** Currently there is overlap with 2 messages appearing in the same pos without the prev being deleted.    
+13. [X] For inputting 'any' Project Number -- Validate, check folder path exists:
+        Check in two stages, check using a:
+        [X] FULL path match
+        [X] PARTIAL match using one of the following combinations:
+            - \d{3}.
+            - \d{4}.
+            - \w{3}\d{4}.
+14. [X] Include Error Handling for non-existent folders(projects)
+15. [X] Add Error Handling for NO Project Nr has been entered.
+16. [X] Add Error Handling in for Project Nr entered with insufficient length, ie between 1 and 3 char.
+    *** Needs work, not every test variation yields perfectly displayed msg, ref #12, ln 48
+_____________________________________________________________________________________
+'''
+# REVISIONS: Thu, 5 Mar 2020
+'''
+ X  = Implemented
+ W  = WIP
+[ ] = Planned
+*** = Error Occurred After Implementation, Other Features Affected
+____________________________________________________________
+01. [X] Solved various bugs and introduced some improvements.
+02. [X] Created the following new function blocks further up in the prog structure:
+       - checkInputBox
+       - foldersCreatedMsg  
+       - foldersExistMsg
+03. [X] Reordered and moved all functions and list to top of structure.
+04. [X] Bound the ENTER key to the User Input box to call createFolders func.
+05. [X] Center align the Button and Information text on the dialog.
+06. [X] Fix Button colour
+07. [X] Make msg for FOLDERS EXISTING font = BOLD, colour = Red
+08. [X] Make dialog size FIXED (Non-resizable)
+09. [X] Add 'focus' to the dialog Input box to control the default & entry text properties
+       Set the default text to light grey when the dialog has no focus.
+       Clear the input box when selected with cursor
+       Set text entered to black colour.
+10. [X] Set 5 second Timeout to close dialog after either even occurs:
+        - The Create Folders button is pressed
+        - The ENTER key is pressed. 
+    *** Currently there is overlap with 2 messages appearing in the same pos without the prev being deleted.    
+11. [W] For inputting 'any' Project Number -- Validate, check folder path exists:
+        Check in two stages, check using a:
+        [X] FULL path match
+        [ ] PARTIAL match using one of the following combinations:
+            - \d{3}.
+            - \d{4}.
+            - \w{3}\d{4}.
 '''
 
 
-# Check if Input box is empty when Button / Enter key pressed.
-def checkInputBox():
-    if len(e.get()) == 0:
-        myLabel1 = Label(root, wraplength=280, fg="Red", text="The INPUT BOX is Empty!")
-        myLabel1.pack()
-        myLabel1.place(x=xPos, y=yPos)
+# Message displays if Input box is empty when Button / Enter key pressed.
+def noProjNr():
+
+    myLabel1 = Label(root, wraplength=280, fg="Red", text="No Project number specified!", font="none 16 bold")
+    myLabel1.pack()
+    myLabel1.place(x=xLen/2, y=yPos, anchor="center")
+
+    closeDialog()
+
+
+def projNrTooSmall():
+
+    myLabel1 = Label(root, wraplength=280, fg="Red", text="Project Number TOO small!", font="none 16 bold")
+    myLabel1.pack()
+    myLabel1.place(x=xLen/2, y=yPos, anchor="center")
+
+    closeDialog()
 
 
 # Message displays when folders are successfully created (label on dialog).
 def foldersCreatedMsg():
+
     myLabel2 = Label(root, wraplength=280, fg="Blue", text="Folders Created Successfully",
                      font="none 16 bold")
     myLabel2.pack()
@@ -103,8 +134,8 @@ def foldersExistMsg():
     closeDialog()
 
 
-def folderMissing():
-    myLabel4 = Label(root, wraplength=280, fg="Red", text="Required PROJECT Folder is MISSING",
+def folderWrongMissing():
+    myLabel4 = Label(root, wraplength=280, fg="Red", text="Required PROJECT Folder is Wrong or MISSING",
                      font="none 16 bold")
     myLabel4.pack()
     myLabel4.place(x=xLen / 2, y=yPos, anchor="center")
@@ -112,23 +143,39 @@ def folderMissing():
     closeDialog()
 
 
-# Create main and sub-folders
+# Create main and sub-folders (incl. check for an empty input box
 def createFolders(*args):
-    rootPath = r'/Users/Shared/' + e.get() + '/3 WIP'
-
-    checkInputBox()  # Check for User Input
 
     try:
-        if os.path.isdir(rootPath):
-            for rt, sub in zip(main, subs):  # Main folders
-                os.mkdir(os.path.join(rootPath, rt))  # Create parent folders
-                for s in sub:  # Create Sub-dirs
-                    os.mkdir(os.path.join(rootPath, rt, s))
+        # The folder var will define the path for the Root Project Folder to be searched recursively.
+        folders = glob.glob("/Users/Shared/**/3 WIP", recursive=True)  # Sets the path and pattern to check recursively
 
-            foldersCreatedMsg()  # Displays msg that folder have been created
+        for projNr in folders:
+            if projNr.__contains__(e.get()):  # Check Project folder exists using Project Nr as partial match
 
-        else:
-            folderMissing()  # Displays msg that the target folder has not been found
+                if len(e.get()) != 0:  # Check if a value nr has been entered in the input box.#
+
+                    if len(e.get()) >= 4:
+
+                        if os.path.isdir(projNr):
+                            for rt, sub in zip(main, subs):  # Main folders
+                                os.mkdir(os.path.join(projNr, rt))  # Create parent folders
+                                for s in sub:  # Create Sub-dirs
+                                    os.mkdir(os.path.join(projNr, rt, s))
+
+                            foldersCreatedMsg()  # Displays msg that folder have been created successfully
+
+                        else:
+                            folderWrongMissing()  # Displays msg that the target folder has not been found
+
+                    else:
+                        projNrTooSmall()
+
+                else:
+                    noProjNr()
+
+            else:
+                folderWrongMissing()  # Displays msg that the target folder has not been found
 
     except FileExistsError:  # Error Handling if folder already exists
         foldersExistMsg()
@@ -147,9 +194,9 @@ def handle_focus_out(_):
     e.insert(0, "Enter the Project Number")
 
 
-# After EVENT (Button / Enter key) Start 5 second timer to close dialog.
+# After EVENT (Button / Enter key) Start 2 second timer to close dialog.
 def closeDialog(*args):
-    root.after(3000, root.destroy)  # 3000 = 3 seconds
+    root.after(2000, root.destroy)  # 3000 = 3 seconds
 
 
 # Main/Top level folders
@@ -220,14 +267,14 @@ root.bind("<FocusIn>", handle_focus_in)
 root.bind("<FocusOut>", handle_focus_out)
 
 # Information label informing user where folders will be created.
-myLabel2 = Label(root, wraplength=280,
+myLabel0 = Label(root, wraplength=280,
                  text="Customer Project Folders will be created under '3 WIP' under the Project selected ",
                  font=('Helvetica', 14))
-myLabel2.pack()
-myLabel2.place(x=xLen/2, y=135, anchor="center")  # Sets the pos
+myLabel0.pack()
+myLabel0.place(x=xLen/2, y=135, anchor="center")  # Sets the pos
 
 # Creates Input box for user entry
-e = Entry(root, width=20, borderwidth=2, font=('Helvetica', 14))
+e = Entry(root, width=25, borderwidth=2, font=('Helvetica', 14))
 e.bind("<Return>", createFolders)  # Bind ENTER key to func 'createFolders' NB: Omit () from func call.
 # e.bind("<Return>", closeDialog)  # Triggers 5 sec countdown timer to close dialog, omit () from func call.
 e.insert(0, "Enter the Project Number")
